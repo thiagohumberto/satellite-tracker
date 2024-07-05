@@ -14,6 +14,7 @@ const float degreesPerStep = 1.8;
 int stepCount = 0;
 int dirStep = 1;
 int currentPosition = 0;
+int currentPositionElevation = 0;
 const int StepX = 2;
 const int DirX = 5;
 const int StepY = 3;
@@ -41,7 +42,7 @@ void reset() {
   lcd.clear();
   lcd.setCursor(0, 1);
   lcd.print("Reseting...");
-  moveTo(360);
+  moveTo(360,0);
   stepCount = 0;
   dirStep = 1;
   currentPosition = 0;
@@ -51,22 +52,22 @@ void reset() {
 }
 
 // Move to Azymuth
-void moveTo(int az) {
-  // if(az == 0) { 
-  //   currentPosition = 0;
-  //   return;
-  // }
+void moveTo(int az, int el) {
+  if(el < 0) el = 0; // out of view
 
   Serial.print("Moving to angle: ");
   Serial.println(az);
 
   int stepsToMove = az/degreesPerStep;
-  Serial.print("Steps to move: ");
-  Serial.println(stepsToMove);
+  int stepsToMoveElevation = el/degreesPerStep;
  
   // Calculate number of steps to move
   int stepsRemaining = abs(stepsToMove - currentPosition);
+  int stepsRemainingElevation = abs(stepsToMoveElevation - currentPositionElevation);
+
   int clock = 1;
+  int clockElevation = 1;
+  
   if(az > currentPosition*degreesPerStep) {
     digitalWrite(DirX, HIGH); // set direction, HIGH for clockwise
     clock = 1;
@@ -74,10 +75,19 @@ void moveTo(int az) {
     digitalWrite(DirX, LOW); // set direction, LOW for anticlockwise
     clock = 0;
   }
+
+  if(el > currentPositionElevation*degreesPerStep) {
+    digitalWrite(DirY, LOW); // set direction, HIGH for clockwise
+    clockElevation = 1;
+  } else {
+    digitalWrite(DirY, HIGH); // set direction, LOW for anticlockwise
+    clockElevation = 0;
+  }
+
   Serial.print("Steps remaining: ");
   Serial.println(stepsRemaining);
 
-  // Move the motor until all steps are completed
+  // Azymyth: Move the motor until all steps are completed 
   while (stepsRemaining > 0) {
     digitalWrite(StepX,HIGH);
     delayMicroseconds(4000);
@@ -87,6 +97,18 @@ void moveTo(int az) {
     stepsRemaining--;
     delay(10);  // Adjust delay as necessary for your motor
   }
+
+  // Elevationh: Move the motor until all steps are completed 
+  while (stepsRemainingElevation > 0) {
+    digitalWrite(StepY,HIGH);
+    delayMicroseconds(4000);
+    digitalWrite(StepY,LOW); 
+    delayMicroseconds(4000);
+    if (clockElevation == 1) currentPositionElevation += 1; else currentPositionElevation -= 1;
+    stepsRemainingElevation--;
+    delay(10);  // Adjust delay as necessary for your motor
+  }
+
   if(currentPosition==200) currentPosition = 0;
   if(currentPosition>200) currentPosition = 200-currentPosition;
 
@@ -112,7 +134,7 @@ void printLCD(String data) {
   int az_number = (int) (az.substring(2).toFloat());
   int el_number = (int) (el.substring(2).toFloat());
 
-  moveTo(az_number); // move to az
+  moveTo(az_number, el_number); // move to az
 
  if(display_c) {
     lcd.setCursor(0, 1);
