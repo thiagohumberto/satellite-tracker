@@ -1,7 +1,11 @@
 # satellite-tracker
+
 Arduino Rotor for satellite tracking
 
-The project aim to build a simple home-made cheap Satellite Tracker, the parts are really basics, I did use: 
+![solution](https://raw.githubusercontent.com/thiagohumberto/satellite-tracker/main/schema/solution.png)
+
+
+The project aim to build a simple home-made cheap Satellite Tracker that moves a dual band antenna to the Azimuth and Elevation received by tracker software, the parts are really basics, I did use: 
 
 1 Arduino (any one)
 
